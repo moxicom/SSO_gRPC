@@ -24,8 +24,8 @@ type Auth interface {
 		ctx context.Context,
 		email string,
 		password string,
-	) (userID int, err error)
-	IsAdmin(ctx context.Context, userID int) (bool, error)
+	) (userID int64, err error)
+	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 
 type ServerAPI struct {
@@ -78,7 +78,13 @@ func (s *ServerAPI) Register(
 func (s *ServerAPI) IsAdmin(
 	ctx context.Context, r *ssov1.IsAdminRequest,
 ) (*ssov1.IsAdminResponse, error) {
-	panic("method IsAdmin not implemented")
+	isAdmin, err := s.auth.IsAdmin(ctx, r.GetUserId())
+	if err != nil {
+		return &ssov1.IsAdminResponse{}, status.Error(codes.Internal, "internal error")
+	}
+	return &ssov1.IsAdminResponse{
+		IsAdmin: isAdmin,
+	}, nil
 }
 
 func validateLogin(r *ssov1.LoginRequest) error {

@@ -80,7 +80,7 @@ func (s *Storage) User(ctx context.Context, email string) (models.User, error) {
 }
 
 // IsAdmin returns is user an admin
-func (s *Storage) IsAdmin(ctx context.Context, userID uint64) (bool, error) {
+func (s *Storage) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 	const op = "storage.sqlite.IsAdmin"
 
 	stmt, err := s.db.Prepare("SELECT is_admin FROM users WHERE id = ?")
@@ -101,4 +101,27 @@ func (s *Storage) IsAdmin(ctx context.Context, userID uint64) (bool, error) {
 	}
 
 	return isAdmin, nil
+}
+
+func (s *Storage) App(ctx context.Context, appID int) (models.App, error) {
+	const op = "storage.sqlite.IsAdmin"
+
+	stmt, err := s.db.Prepare("SELECT id, name, secret FROM apps where id = ?")
+	if err != nil {
+		return models.App{}, utils.MakeError(op, err)
+	}
+
+	row := stmt.QueryRowContext(ctx, appID)
+
+	var app models.App
+	err = row.Scan(&app.ID, &app.Name, &app.Secret)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return models.App{}, utils.MakeError(op, storage.ErrAppNotFound)
+		}
+
+		return models.App{}, utils.MakeError(op, err)
+	}
+
+	return app, nil
 }

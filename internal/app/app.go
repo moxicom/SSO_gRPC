@@ -6,6 +6,8 @@ import (
 
 	grpcapp "github.com/moxicom/SSO_gRPC/internal/app/grpc"
 	authgrpc "github.com/moxicom/SSO_gRPC/internal/grpc/auth"
+	"github.com/moxicom/SSO_gRPC/internal/services/auth"
+	"github.com/moxicom/SSO_gRPC/internal/storage/sqlite"
 )
 
 type App struct {
@@ -22,11 +24,14 @@ func New(
 	storagePath string,
 	tokenTTL time.Duration,
 ) *App {
-	// TODO: init storage
+	storage, err := sqlite.New(storagePath)
+	if err != nil {
+		panic(err)
+	}
 
-	// TODO: init server layer
+	authService := auth.New(log, storage, storage, storage, tokenTTL)
 
-	grpcApp := grpcapp.New(log, Mock{}, grpcPort)
+	grpcApp := grpcapp.New(log, authService, grpcPort)
 
 	return &App{
 		GRPCSrv: grpcApp,

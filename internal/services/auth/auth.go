@@ -32,7 +32,7 @@ type UserSaver interface {
 // Interact with storage
 type UserProvider interface {
 	User(ctx context.Context, email string) (models.User, error)
-	IsAdmin(ctx context.Context, userID int) (bool, error)
+	IsAdmin(ctx context.Context, userID int64) (bool, error)
 }
 
 // Interact with storage
@@ -132,7 +132,7 @@ func (a *Auth) RegisterNewUser(
 
 	id, err := a.usrSaver.SaveUser(ctx, email, passHash)
 	if err != nil {
-		if errors.Is(err, storage.ErrUserAlreadyExists){
+		if errors.Is(err, storage.ErrUserAlreadyExists) {
 			log.Warn("user already exists", err)
 			return 0, fmt.Errorf("%s : %w", op, storage.ErrUserAlreadyExists)
 		}
@@ -144,10 +144,10 @@ func (a *Auth) RegisterNewUser(
 }
 
 // IsAdmin checks if the user with the given ID is an admin.
-func (a *Auth) IsAdmin(ctx context.Context, userID int) (bool, error) {
+func (a *Auth) IsAdmin(ctx context.Context, userID int64) (bool, error) {
 	const op = "auth.IsAdmin"
 
-	log := a.log.With(slog.String("op", op), slog.Int("userID", userID))
+	log := a.log.With(slog.String("op", op), slog.Int64("userID", userID))
 
 	log.Info("checking if user is admin")
 
